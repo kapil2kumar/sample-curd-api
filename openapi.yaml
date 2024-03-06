@@ -1,8 +1,8 @@
 openapi: 3.0.3
 info:
-  title: Choreo Samples - Reading List - Nodejs REST API
+  title: Choreo Samples - Product Stock List - Nodejs REST API
   description: >-
-    This is a sample API specification for a simple reading list application with in-memory cache
+    This is a sample API specification for a simple product stock list application with in-memory cache
     written in Nodejs
   license:
     name: Apache 2.0
@@ -14,50 +14,64 @@ externalDocs:
 servers:
   - url: http://localhost:8080
 tags:
-  - name: books
-    description: In-memory book list cache API
+  - name: products
+    description: In-memory product list cache API
 paths:
-  /books:
-    summary: List all books
+  /product/stock:
+    summary: List all Products
     get:
-      summary: List all books
-      operationId: ListAllBooks
+      summary: List all products
+      operationId: ListAllProducts
       tags:
-        - books
+        - products
       responses:
         "200":
           description: Successful operation
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/StringArray"
+                $ref: "#/components/schemas/ArrayOfKeyValue"
     post:
-      summary: Insert a new book
-      operationId: SetNewBook
+      summary: Insert a new products
+      operationId: SetNewProduct
       responses:
         "200":
           description: Successful operation
         "400":
           description: Invalid request body
       tags:
-        - books
+        - products
       requestBody:
         content:
           application/json:
             schema:
               $ref: "#/components/schemas/KeyValue"
-
-  /books/{uuid}:
-    summary: Get book by UUID
+    put:
+      summary: Update product stock
+      operationId: UpdateProduct
+      responses:
+        "200":
+          description: Successful operation
+        "400":
+          description: Invalid request body
+      tags:
+        - products
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/IdProductAndStock"
+  /product/stock/{IdProduct}:
+    summary: Get products by IdProduct
     get:
       tags:
-        - books
-      summary: Get book by UUID
-      operationId: GetBookByUUID
+        - products
+      summary: Get products by IdProduct
+      operationId: GetProductByIdProduct
       parameters:
-        - name: uuid
+        - name: IdProduct
           in: path
-          description: UUID of book to return
+          description: IdProduct of products to return
           required: true
           schema:
             type: string
@@ -69,48 +83,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/KeyValue"
         "404":
-          description: UUID not found
-    delete:
-      tags:
-        - books
-      summary: Delete book by UUID
-      description: Deletes a single book based on the UUID supplied
-      operationId: DeleteBookByUUID
-      parameters:
-        - name: uuid
-          in: path
-          description: UUID of book to delete
-          required: true
-          schema:
-            type: string
-      responses:
-        "200":
-          description: Successful operation
-        "404":
-          description: ISBN not found
-    put:
-      tags:
-        - books
-      summary: Update book status by UUID
-      description: Updates the status of the book based on the UUID supplied
-      operationId: UpdateBookStatusByUUID
-      parameters:
-        - name: uuid
-          in: path
-          description: UUID of book to update
-          required: true
-          schema:
-            type: string
-      responses:
-        "200":
-          description: Successful operation
-        "404":
-          description: UUID not found
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/Status"
+          description: IdProduct not found
   /healthz:
     summary: Healthcheck endpoint
     get:
@@ -119,37 +92,61 @@ paths:
       responses:
         "200":
           description: Healthy response
-
 components:
   schemas:
     Key:
       type: object
       properties:
-        uuid:
+        IdProduct:
           type: string
-          example: "my-uuid"
-    Status:
+          example: "my-IdProduct"
+    IdProductAndStock:
       type: object
+      required:
+        - IdProduct
+        - Stock
       properties:
-        status:
-          type: string
-          example: "read"
+        IdProduct:
+          type: number
+          example: 123
+        Stock:
+          type: number
+          example: 1000
     KeyValue:
       type: object
       required:
-        - title
-        - author
-        - status
+        - IdProduct
+        - NameProduct
+        - Stock
       properties:
-        title:
+        IdProduct:
+          type: number
+          example: 123
+        NameProduct:
           type: string
-          example: "my-title"
-        author:
-          type: string
-          example: "my-author"
-        status:
-          type: string
-          example: "read"
+          example: "IPhone 15"
+        Stock:
+          type: number
+          example: 1000
+    ArrayOfKeyValue:
+      type: array
+      items:
+        minItems: 0
+        type: object
+        required:
+          - IdProduct
+          - NameProduct
+          - Stock
+        properties:
+          IdProduct:
+            type: number
+            example: 123
+          NameProduct:
+            type: string
+            example: "IPhone 15"
+          Stock:
+            type: number
+            example: 1000
     StringArray:
       type: array
       items:
