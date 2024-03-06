@@ -6,78 +6,52 @@ const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// add a book - request body should contain a title, status and an author
-app.post("/reading-list/books", (req, res) => {
-  const { title, author, status } = req.body;
-  const uuid = uuidv4();
-  if (!(status === "read" || status === "to_read" || status === "reading")) {
-    return res.status(400).json({
-      error: "Status is invalid. Accepted statuses: read | to_read | reading",
-    });
+// add product stock - request body should contain a IdProduct, NameProduct and an Stock
+app.post("/product/stock", (req, res) => {
+  const { IdProduct, NameProduct , Stock } = req.body;
+  if (!IdProduct || !NameProduct || !Stock) {
+    return res.status(400).json({ error: "IdProduct, NameProduct or Stock is empty" });
   }
-  if (!title || !author || !status) {
-    return res.status(400).json({ error: "Title, Status or Author is empty" });
-  }
-  const value = { uuid, title, author, status };
-  cache.set(uuid, value, 86400);
-  return res.status(201).json({ uuid, title, author });
+  const value = { IdProduct, NameProduct , Stock };
+  cache.set(IdProduct, value, 86400);
+  return res.status(201).json({ IdProduct, NameProduct , Stock });
 });
 
-// update status of a book by uuid
-app.put("/reading-list/books/:uuid", (req, res) => {
-  const uuid = req.params.uuid;
-  const { status } = req.body;
-  if (!uuid || typeof uuid !== "string") {
-    return res.status(400).json({ error: "missing or invalid UUID" });
+
+// update stock of a product by IdProduct
+app.put("/product/stock", (req, res) => {
+  const { IdProduct , Stock } = req.body;
+  if (!IdProduct || !Stock) {
+    return res.status(400).json({ error: "IdProduct or Stock is empty" });
   }
-  if (!cache.has(uuid)) {
-    return res.status(404).json({ error: "UUID does not exist" });
-  }
-  if (!(status === "read" || status === "to_read" || status === "reading")) {
-    return res.status(400).json({
-      error: "Status is invalid. Accepted statuses: read | to_read | reading",
-    });
-  }
-  const value = cache.get(uuid);
-  value.status = status;
-  cache.set(uuid, value);
-  return res.json({ uuid, status });
+  const value = cache.get(IdProduct);
+  value.Stock = Stock;
+  cache.set(IdProduct, value);
+  return res.json({ IdProduct, Stock });
 });
 
-// get the list of books
-app.get("/reading-list/books", (_, res) => {
+
+// get the list of products with stock
+app.get("/product/stock", (_, res) => {
   const keys = cache.keys();
-  const allData = {};
+  const allData = [];
   for (const key of keys) {
-    allData[key] = cache.get(key);
+    allData.push(cache.get(key));
   }
   return res.json(allData);
 });
 
-// get a book by uuid
-app.get("/reading-list/books/:uuid", (req, res) => {
-  const uuid = req.params.uuid;
-  if (!uuid || typeof uuid !== "string") {
-    return res.status(400).json({ error: "missing or invalid UUID" });
+// get a product stock by IdProduct
+app.get("/product/stock/:IdProduct", (req, res) => {
+  const IdProduct = req.params.IdProduct;
+  if (!IdProduct || typeof IdProduct !== "string") {
+    return res.status(400).json({ error: "missing or invalid IdProduct" });
   }
-  if (!cache.has(uuid)) {
-    return res.status(404).json({ error: "UUID does not exist" });
+  if (!cache.has(IdProduct)) {
+    return res.status(404).json({ error: "IdProduct does not exist" });
   }
-  const value = cache.get(uuid);
+  const value = cache.get(IdProduct);
   return res.json(value);
-});
-
-// delete a book by uuid
-app.delete("/reading-list/books/:uuid", (req, res) => {
-  const uuid = req.params.uuid;
-  if (!uuid || typeof uuid !== "string") {
-    return res.status(400).json({ error: "missing or invalid UUID" });
-  }
-  if (!cache.has(uuid)) {
-    return res.status(404).json({ error: "UUID does not exist" });
-  }
-  cache.del(uuid);
-  return res.json({ uuid });
 });
 
 // health check
